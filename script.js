@@ -22,29 +22,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const productsContainer = document.getElementById("productsContainer");
   const productForm = document.getElementById("product-form");
 
-  // --- Admin Auth ---
+  // Admin login
   if (loginForm) {
     loginForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const email = loginForm.email.value;
-      const password = loginForm.password.value;
+      const email = loginForm.querySelector("input[name=email]").value;
+      const password = loginForm.querySelector("input[name=password]").value;
 
       signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          loginForm.reset();
-        })
-        .catch(err => {
-          alert("Login failed: " + err.message);
-        });
+        .then(() => loginForm.reset())
+        .catch(err => alert("Login failed: " + err.message));
     });
   }
 
+  // Logout
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      signOut(auth);
-    });
+    logoutBtn.addEventListener("click", () => signOut(auth));
   }
 
+  // Auth state
   onAuthStateChanged(auth, (user) => {
     if (user && user.email === ADMIN_EMAIL) {
       if (loginForm) loginForm.classList.add("hidden");
@@ -56,11 +52,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (adminContent) adminContent.classList.add("hidden");
       if (loginForm) loginForm.classList.remove("hidden");
       if (logoutBtn) logoutBtn.classList.add("hidden");
-      if (user) signOut(auth); // unauthorized user
+      if (user) signOut(auth);
     }
   });
 
-  // --- Admin: Load & Render Products ---
+  // Load products in admin
   function loadProductsAdmin() {
     if (!productsContainer) return;
     onSnapshot(collection(db, "products"), (snapshot) => {
@@ -79,17 +75,15 @@ document.addEventListener("DOMContentLoaded", () => {
         productsContainer.appendChild(card);
       });
 
-      // Delete buttons
       productsContainer.querySelectorAll(".delete-btn").forEach(btn => {
         btn.onclick = () => deleteDoc(doc(db, "products", btn.dataset.id));
       });
 
-      // Edit buttons
       productsContainer.querySelectorAll(".edit-btn").forEach(btn => {
         btn.onclick = async () => {
           const docRef = doc(db, "products", btn.dataset.id);
-          const productDoc = await getDocs(collection(db, "products"));
-          productDoc.forEach(docSnap => {
+          const snapshot = await getDocs(collection(db, "products"));
+          snapshot.forEach(docSnap => {
             if (docSnap.id === btn.dataset.id) {
               const data = docSnap.data();
               document.getElementById("name").value = data.name;
@@ -103,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Admin: Submit Product (Add or Edit) ---
+  // Add/edit product
   if (productForm) {
     productForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -122,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Admin: Load Orders ---
+  // Load orders
   function loadOrdersAdmin() {
     if (!ordersContainer) return;
     onSnapshot(collection(db, "orders"), (snapshot) => {
@@ -143,11 +137,12 @@ document.addEventListener("DOMContentLoaded", () => {
             <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
             <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
           </select>
+          ${order.status === "Delivered" ? `<button class="clear-btn" data-id="${docSnap.id}">Clear</button>` : ""}
         `;
         ordersContainer.appendChild(card);
       });
 
-      // Status Change
+      // Handle status change
       ordersContainer.querySelectorAll(".status-select").forEach(select => {
         select.addEventListener("change", () => {
           updateDoc(doc(db, "orders", select.dataset.id), {
@@ -155,10 +150,19 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         });
       });
+
+      // Handle clear button
+      ordersContainer.querySelectorAll(".clear-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (confirm("Are you sure you want to clear this order?")) {
+            deleteDoc(doc(db, "orders", btn.dataset.id));
+          }
+        });
+      });
     });
   }
 
-  // --- Cart Page: Handle Checkout ---
+  // Cart page checkout
   const checkoutForm = document.getElementById("checkout-form");
   if (checkoutForm) {
     checkoutForm.addEventListener("submit", async (e) => {
@@ -168,7 +172,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const mobile = checkoutForm.mobile.value;
       const remember = checkoutForm.remember.checked;
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-
       const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
       await addDoc(collection(db, "orders"), {
@@ -188,7 +191,6 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "orders.html";
     });
 
-    // Load remembered info
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     if (userInfo) {
       checkoutForm.name.value = userInfo.name || "";
@@ -198,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Cart Page: Render Cart Items ---
+  // Cart display
   const cartItemsContainer = document.getElementById("cartItems");
   if (cartItemsContainer) {
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
@@ -221,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Index Page: Load & Render Products ---
+  // Index page product listing
   const productsGrid = document.getElementById("products");
   const categoryFilter = document.getElementById("categoryFilter");
   const searchInput = document.getElementById("searchInput");
@@ -234,16 +236,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       renderProducts(products);
 
-      if (categoryFilter) {
-        categoryFilter.addEventListener("change", () => {
-          renderProducts(products);
-        });
-      }
-      if (searchInput) {
-        searchInput.addEventListener("input", () => {
-          renderProducts(products);
-        });
-      }
+      categoryFilter?.addEventListener("change", () => renderProducts(products));
+      searchInput?.addEventListener("input", () => renderProducts(products));
 
       function renderProducts(all) {
         let filtered = [...all];
@@ -268,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Add to Cart Function (Global) ---
+  // Add to cart function
   window.addToCart = function (id, name, price) {
     let cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const existing = cart.find(p => p.id === id);
@@ -281,6 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
     alert("Added to cart");
   };
 });
+
 
 
 

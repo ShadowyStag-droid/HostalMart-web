@@ -3,69 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>HostelMart - Admin Panel</title>
+  <title>HostelMart Admin</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="main-header">
-    <div class="header-content">
-      <h1>🛠️ Admin Panel</h1>
-      <p class="tagline">Manage Products & Orders</p>
-    </div>
-    <nav class="nav-buttons">
-      <a href="index.html" class="nav-btn">Home</a>
-      <button id="logoutBtn" class="nav-btn hidden">Logout</button>
-    </nav>
+  <header>
+    <h1>HostelMart Admin Panel</h1>
+    <p>Manage products and orders</p>
+    <button id="logoutBtn" class="hidden">Logout</button>
   </header>
 
-  <div class="login-container" id="adminLogin">
+  <!-- Login Form -->
+  <section id="admin-login">
     <h2>Admin Login</h2>
-    <input type="email" id="adminEmail" placeholder="Email" />
-    <input type="password" id="adminPassword" placeholder="Password" />
-    <button id="adminLoginBtn">Login</button>
-    <p id="loginError" class="error-text"></p>
-  </div>
+    <form>
+      <input type="email" name="email" placeholder="Admin Email" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+  </section>
 
-  <main id="adminContent" class="hidden">
-    <section class="filter-bar">
-      <input type="text" id="adminSearchInput" placeholder="Search products..." />
-      <select id="adminCategorySelect">
-        <option value="all">All</option>
-        <option value="regular">Regular</option>
-        <option value="combo">Combo</option>
-      </select>
-    </section>
+  <!-- Admin Content -->
+  <section id="admin-content" class="hidden">
+    <!-- Add/Edit Product Form -->
+    <h2>Add / Edit Product</h2>
+    <form id="product-form">
+      <input type="text" id="name" placeholder="Product Name" required />
+      <input type="number" id="price" placeholder="Price ₹" required />
+      <input type="text" id="category" placeholder="Category (e.g. snacks, drinks, combo)" required />
+      <input type="hidden" id="productId" />
+      <button type="submit">Save Product</button>
+    </form>
 
-    <section class="product-section">
-      <h2>📋 All Products</h2>
-      <div id="adminProductList" class="product-grid"></div>
-    </section>
+    <!-- Product List -->
+    <h2>Product List</h2>
+    <div id="productsContainer" class="grid"></div>
 
-    <section class="product-section">
-      <h2>📦 All Orders</h2>
-      <div id="allOrders" class="product-grid"></div>
-    </section>
+    <!-- Orders List -->
+    <h2>User Orders</h2>
+    <div id="ordersContainer" class="grid"></div>
+  </section>
 
-    <section class="product-section">
-      <h2>➕ Add Product</h2>
-      <form id="addProductForm" class="form-grid">
-        <input type="text" id="productName" placeholder="Name" required />
-        <input type="text" id="productCategory" placeholder="Category" required />
-        <input type="number" id="productPrice" placeholder="Price" required />
-        <input type="text" id="productImage" placeholder="Image URL" required />
-        <button type="submit">Add Product</button>
-      </form>
-    </section>
-  </main>
-
-  <footer>
-    <p>© 2025 HostelMart</p>
-  </footer>
-
+  <!-- Scripts -->
   <script type="module" src="firebaseConfig.js"></script>
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
